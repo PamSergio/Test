@@ -1,0 +1,115 @@
+pipeline {
+    agent any
+    
+    environment{
+        //execDir = '/usr/local/bin'
+        execDir = '/usr/bin'
+        desktopDir  = "/Users/mariefraulienpamelasergio/Desktop/${JOB_NAME}"
+        dockerImage = 'v4tech/imagemagick'
+        outputFolder = 'OutputImages'
+    }
+
+    stages {    
+        stage ('Preparation Stage') {
+            environment {
+                    execMod = '/bin/chmod'
+            }   
+            steps {
+                echo "Go to workspace: ${workspace}/"
+                script {
+                    dir ("${workspace}/") {
+                        sh 'pwd'
+                        echo "Check all files in workspace"
+                        sh "ls -l"
+                    }
+                }
+                echo "Remove files output folder and its files: ${outputFolder}/*"
+                sh "sudo rm -R ${workspace}/${outputFolder}"
+                echo "Recreate output folder"
+                sh "mkdir ${outputFolder}"
+                echo "Create sub-folders for image resize: 256x256, 128x128, 64x64, 48x48, 32x32, 22x22, 16x16, 12x12"
+                sh "mkdir ${workspace}/${outputFolder}/256x256 ${workspace}/${outputFolder}/128x128 ${workspace}/${outputFolder}/64x64 ${workspace}/${outputFolder}/48x48 ${workspace}/${outputFolder}/32x32 ${workspace}/${outputFolder}/22x22 ${workspace}/${outputFolder}/16x16 ${workspace}/${outputFolder}/12x12"
+                echo "Create sub-folders for image resize: 256x256, 128x128, 64x64, 48x48, 32x32, 22x22, 16x16, 12x12"
+                sh "mkdir ${workspace}/${outputFolder}/256x256/ConvertedtoBMP ${workspace}/${outputFolder}/128x128/ConvertedtoBMP ${workspace}/${outputFolder}/64x64/ConvertedtoBMP ${workspace}/${outputFolder}/48x48/ConvertedtoBMP ${workspace}/${outputFolder}/32x32/ConvertedtoBMP ${workspace}/${outputFolder}/22x22/ConvertedtoBMP ${workspace}/${outputFolder}/16x16/ConvertedtoBMP ${workspace}/${outputFolder}/12x12/ConvertedtoBMP"
+                echo "Create sub-folders for image resize: 256x256, 128x128, 64x64, 48x48, 32x32, 22x22, 16x16, 12x12"
+                sh "mkdir ${workspace}/${outputFolder}/256x256/ConvertedtoICO ${workspace}/${outputFolder}/128x128/ConvertedtoICO ${workspace}/${outputFolder}/64x64/ConvertedtoICO ${workspace}/${outputFolder}/48x48/ConvertedtoICO ${workspace}/${outputFolder}/32x32/ConvertedtoICO ${workspace}/${outputFolder}/22x22/ConvertedtoICO ${workspace}/${outputFolder}/16x16/ConvertedtoICO ${workspace}/${outputFolder}/12x12/ConvertedtoICO"
+                echo "Change file permission of cloned files from repository"
+                sh "sudo /bin/chmod -R 777 ."
+                echo "Check file permission of the files in workspace"
+                sh "ls -l"
+                //echo "Remove output folder on the desktop - if existing"
+                //sh "sudo rm -rf ${desktopDir}"
+            }
+        }
+
+        stage ('Image Resize Stage') {          
+            environment {
+                resizeCon = 'ResizeContainer'
+            }
+            steps {
+                echo 'Resize image/s to 256x256, 128x128, 64x64, 48x48, 32x32, 22x22, 16x16, 12x12'
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 256x256 -quality 100% -path /images/${outputFolder}/256x256 /images/*.*"
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 128x128 -quality 100% -path /images/${outputFolder}/128x128 /images/*.*"
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 64x64 -quality 100% -path /images/${outputFolder}/64x64 /images/*.*"
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 48x48 -quality 100% -path /images/${outputFolder}/48x48 /images/*.*"
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 32x32 -quality 100% -path /images/${outputFolder}/32x32 /images/*.*"
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 22x22 -quality 100% -path /images/${outputFolder}/22x22 /images/*.*"
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 16x16 -quality 100% -path /images/${outputFolder}/16x16 /images/*.*"
+                sh "sudo ${execDir}/docker run --rm --name ${resizeCon} -v ${workspace}:/images ${dockerImage} mogrify -resize 12x12 -quality 100% -path /images/${outputFolder}/12x12 /images/*.*"
+            }
+        }
+
+        stage ('Image Conversion Stage') {
+            environment {
+                convertCon = 'ConvertContainer'
+            }
+            steps {
+                echo 'Convert resized image/s to BMP'
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/256x256:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/128x128:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/64x64:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/48x48:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/32x32:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/22x22:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/16x16:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/12x12:/images ${dockerImage} mogrify -format bmp -path /images/ConvertedtoBMP /images/*.*"  
+                echo 'Convert resized image/s to ICO'
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/256x256:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/128x128:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/64x64:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/48x48:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/32x32:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/22x22:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/16x16:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+                sh "sudo ${execDir}/docker run --rm --name ${convertCon} -v ${workspace}/${outputFolder}/12x12:/images ${dockerImage} mogrify -format ico -path /images/ConvertedtoICO /images/*.*"  
+            }
+        }   
+
+        stage ('Commit files to GIT Repo'){
+            environment {
+                gitRepo = 'https://PamSergio:phGIL2hundred5.@github.com/PamSergio/Test.git'
+                gitComment = 'New batch of resized and converted images'
+            }
+            steps {
+                echo 'Configure GIT'
+                echo 'Delete .git folder'
+                sh "sudo rm -rf ${workspace}/.git"
+                echo 'Initialize empty .git'
+                sh "${execDir}/git init"
+                echo 'Add repository in git'
+                sh "${execDir}/git remote add origin ${gitRepo}"
+                sh "${execDir}/git status"
+                echo 'Commit output files to GIT repository: https://github.com/PamSergio/Test.git'
+                echo 'Add files to track by git'
+                //sh "${execDir}/git config --global user.email mariefraulein.sergi@hcl.com"
+                //sh "${execDir}/git config --global user.name 'Pamela Sergio'"
+                sh "${execDir}/git add ."
+                sh "${execDir}/git status"
+                sh "${execDir}/git commit -m '${gitComment}'"
+                sh "${execDir}/git status"
+                echo "Push files to the repository: ${gitRepo}"
+                sh "${execDir}/git push origin master --force"
+            }
+        }   
+    }
+}   
